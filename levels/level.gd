@@ -9,6 +9,7 @@ func _ready():
 	$Items.hide()
 	$Player.reset($SpawnPoint.position)
 	set_camera_limits()
+	spawn_items()
 
 func set_camera_limits():
 	var map_size = $World.get_used_rect()
@@ -32,3 +33,6 @@ func _on_item_picked_up():
 func set_score(value):
 	score = value
 	score_changed.emit(score)
+
+func _on_player_died():
+	GameState.restart()

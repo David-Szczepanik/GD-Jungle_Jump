@@ -79,6 +79,15 @@ func _physics_process(delta):
 		change_state(IDLE)
 	if state == JUMP and velocity.y > 0:
 		$AnimationPlayer.play("jump_down")
+	
+	for i in get_slide_collision_count():
+		var collision = get_slide_collision(i)
+		if collision.get_collider().is_in_group("enemies"):
+			if position.y < collision.get_collider().position.y:
+				collision.get_collider().take_damage()
+				velocity.y = -200
+			else:
+				hurt()
 
 func hurt():
 	if state != HURT:
