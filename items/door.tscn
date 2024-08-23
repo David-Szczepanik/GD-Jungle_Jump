@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://cc6hm6il07psk"]
+
+[ext_resource type="Texture2D" uid="uid://ldtssxu78xc3" path="res://assets/environment/props.png" id="1_73y8h"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xgw2h"]
+size = Vector2(22, 34)
+
+[node name="Door" type="Area2D"]
+collision_layer = 8
+collision_mask = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_73y8h")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(14.1876, 62.7484, 21.9402, 33.4299)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_xgw2h")

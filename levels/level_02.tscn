@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://chhp8bk1xe5d"]
+
+[ext_resource type="PackedScene" uid="uid://b6icdwe0iacv5" path="res://levels/level.tscn" id="1_hd7tj"]
+
+[node name="Level_02" instance=ExtResource("1_hd7tj")]
+
+[node name="World" parent="." index="3"]
+layer_0/tile_data = PackedInt32Array(589825, 65536, 1, 589826, 65536, 1, 589827, 65536, 1, 589828, 65536, 1, 589829, 65536, 1, 589830, 65536, 1, 589831, 65536, 1, 589832, 65536, 1, 589833, 65536, 1, 589834, 65536, 1, 589835, 65536, 1, 589836, 65536, 1)
+
+[node name="Player" parent="." index="4"]
+position = Vector2(63, 125)
+
+[node name="SpawnPoint" parent="." index="5"]
+position = Vector2(97, 111)
