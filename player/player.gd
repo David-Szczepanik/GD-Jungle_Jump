@@ -3,13 +3,6 @@ extends CharacterBody2D
 signal life_changed
 signal died
 
-var life = 3: set = set_life
-
-func set_life(value):
-	life = value
-	life_changed.emit(life)
-	if life <= 0:
-		change_state(DEAD)
 
 @export var gravity = 750
 @export var run_speed = 150
@@ -21,7 +14,10 @@ func set_life(value):
 enum {IDLE, RUN, JUMP, HURT, DEAD, CLIMB}
 var state = IDLE
 var jump_count = 0
-var is_on_leader = false
+var last_floor = false
+var is_on_ladder = false
+var life = 3:
+	set = set_life
 
 func _ready():
 	change_state(IDLE)
@@ -40,10 +36,11 @@ func change_state(new_state):
 			life -= 1
 			await get_tree().create_timer(0.5).timeout
 			change_state(IDLE)
+			if life <= 0:
+				change_state(DEAD)
 		JUMP:
 			$AnimationPlayer.play("jump_up")
 			jump_count = 1
-			$JumpSound.play()
 		DEAD:
 			hide()
 			died.emit()
@@ -51,17 +48,15 @@ func change_state(new_state):
 			$AnimationPlayer.play("climb")
 
 func get_input():
-		return
-if state == HURT:
+	if state == HURT:
+		return	#don't allow movement when HURT
 	var right = Input.is_action_pressed("right")
 	var left = Input.is_action_pressed("left")
 	var jump = Input.is_action_just_pressed("jump")
 	var up = Input.is_action_pressed("climb")
 	var down = Input.is_action_pressed("crouch")
 
-	# movement occurs in all states
-	velocity.x = 0
-
+	# CLIMBING LADDER
 	if up and state != CLIMB and is_on_ladder:
 		change_state(CLIMB)
 	if state == CLIMB:
@@ -76,23 +71,31 @@ if state == HURT:
 			$AnimationPlayer.stop()
 	if state == CLIMB and not is_on_ladder:
 		change_state(IDLE)
-		
 
-	if jump and state == JUMP and jump_count < max_jumps and jump_count > 0:
-		$JumpSound.play()
-		$AnimationPlayer.play("jump_up")
-		velocity.y = jump_speed / double_jump_factor
-		jump_count += 1
+	# movement occurs in all states
+	velocity.x = 0
+
+#TODO: velocity.x
 	if right:
 		velocity.x += run_speed
 		$Sprite2D.flip_h = false
 	if left:
 		velocity.x -= run_speed
 		$Sprite2D.flip_h = true
+
+	# DOUBLE JUMPING
+	if jump and state == JUMP and jump_count < max_jumps and jump_count > 0:
+		$JumpSound.play()
+		$AnimationPlayer.play("jump_up")
+		velocity.y = jump_speed / double_jump_factor
+		jump_count += 1
+
 	# only allow jumping when on the ground
 	if jump and is_on_floor():
+		$JumpSound.play()
 		change_state(JUMP)
 		velocity.y = jump_speed
+
 	# IDLE transitions to RUN when moving
 	if state == IDLE and velocity.x != 0:
 		change_state(RUN)
@@ -104,16 +107,15 @@ if state == HURT:
 		change_state(JUMP)
 		
 func _physics_process(delta):
-	velocity.y += gravity * delta
+	if state != CLIMB:
+		velocity.y += gravity * delta
 	get_input()
 
 	move_and_slide()
-	if state == JUMP and is_on_floor():
-		change_state(IDLE)
-		$Dust.emitting = true
-	if state == JUMP and velocity.y > 0:
-		$AnimationPlayer.play("jump_down")
-	
+	if state == HURT:
+		return
+
+	# COLLISIONS
 	for i in get_slide_collision_count():
 		var collision = get_slide_collision(i)
 		if collision.get_collider().is_in_group("enemies"):
@@ -122,11 +124,33 @@ func _physics_process(delta):
 				velocity.y = -200
 			else:
 				hurt()
+	
+	# LADDER
+	if state != CLIMB and is_on_ladder:
+		if velocity.y > 0:	# if falling down
+			change_state(CLIMB)
+			velocity.y = 0	# stop falling
+
+	# JUMPING
+	if state == JUMP and is_on_floor():
+		change_state(IDLE)
+		jump_count = 0
+		$Dust.emitting = true
+	if state == JUMP and velocity.y > 0:
+		$AnimationPlayer.play("jump_down")
+
+	last_floor = is_on_floor()
 
 func hurt():
 	if state != HURT:
+		$HurtSound.play()
 		change_state(HURT)
-	$HurtSound.play()
+
+func set_life(value):
+	life = value
+	life_changed.emit(life)
+	if life <= 0:
+		change_state(DEAD)
 
 func reset(_position):
 	position = _position
