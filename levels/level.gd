@@ -39,6 +39,7 @@ func _on_door_entered(_body):
 
 func _on_item_picked_up():
 	score += 1
+	$PickupSound.play()
 	
 func set_score(value):
 	score = value

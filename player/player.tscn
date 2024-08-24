@@ -1,7 +1,9 @@
-[gd_scene load_steps=11 format=3 uid="uid://pj8utl660a2i"]
+[gd_scene load_steps=15 format=3 uid="uid://pj8utl660a2i"]
 
 [ext_resource type="Texture2D" uid="uid://lqals8v555pu" path="res://assets/player_sheet.png" id="1_l4e7a"]
 [ext_resource type="Script" path="res://player/player.gd" id="1_u60fn"]
+[ext_resource type="AudioStream" uid="uid://cnmtgqiun2gco" path="res://assets/audio/jump4.ogg" id="3_xy2sm"]
+[ext_resource type="AudioStream" uid="uid://g6ogr65lypmd" path="res://assets/audio/hurt1.ogg" id="4_d5hxb"]
 
 [sub_resource type="Animation" id="Animation_c3koy"]
 length = 0.001
@@ -101,9 +103,27 @@ tracks/0/keys = {
 "values": [18, 13]
 }
 
+[sub_resource type="Animation" id="Animation_v4ayb"]
+resource_name = "climb"
+length = 0.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.1, 0.2, 0.3, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 0, 2]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_sny5j"]
 _data = {
 "RESET": SubResource("Animation_c3koy"),
+"climb": SubResource("Animation_v4ayb"),
 "hurt": SubResource("Animation_rr2we"),
 "idle": SubResource("Animation_6fha7"),
 "jump_down": SubResource("Animation_0v022"),
@@ -113,6 +133,9 @@ _data = {
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8unde"]
 size = Vector2(10, 20)
+
+[sub_resource type="Gradient" id="Gradient_cjmtm"]
+colors = PackedColorArray(1, 0.819608, 0, 1, 1, 1, 1, 0)
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
@@ -137,3 +160,27 @@ shape = SubResource("RectangleShape2D_8unde")
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(2.5, 2.5)
 limit_top = 0
+
+[node name="JumpSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_xy2sm")
+volume_db = -16.478
+
+[node name="HurtSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_d5hxb")
+volume_db = -15.559
+
+[node name="Dust" type="CPUParticles2D" parent="."]
+position = Vector2(-2, 0)
+rotation = -1.5708
+emitting = false
+amount = 20
+lifetime = 0.45
+one_shot = true
+speed_scale = 2.0
+explosiveness = 0.7
+emission_shape = 3
+emission_rect_extents = Vector2(1, 6)
+gravity = Vector2(0, 0)
+initial_velocity_max = 10.0
+scale_amount_max = 3.0
+color_ramp = SubResource("Gradient_cjmtm")

@@ -14,9 +14,14 @@ func set_life(value):
 @export var gravity = 750
 @export var run_speed = 150
 @export var jump_speed = -300
+@export var max_jumps = 2
+@export var double_jump_factor = 1.5
+@export var climb_speed = 50
 
-enum {IDLE, RUN, JUMP, HURT, DEAD}
+enum {IDLE, RUN, JUMP, HURT, DEAD, CLIMB}
 var state = IDLE
+var jump_count = 0
+var is_on_leader = false
 
 func _ready():
 	change_state(IDLE)
@@ -37,19 +42,47 @@ func change_state(new_state):
 			change_state(IDLE)
 		JUMP:
 			$AnimationPlayer.play("jump_up")
+			jump_count = 1
+			$JumpSound.play()
 		DEAD:
 			hide()
 			died.emit()
+		CLIMB:
+			$AnimationPlayer.play("climb")
 
 func get_input():
-	if state == HURT:
 		return
+if state == HURT:
 	var right = Input.is_action_pressed("right")
 	var left = Input.is_action_pressed("left")
 	var jump = Input.is_action_just_pressed("jump")
+	var up = Input.is_action_pressed("climb")
+	var down = Input.is_action_pressed("crouch")
 
 	# movement occurs in all states
 	velocity.x = 0
+
+	if up and state != CLIMB and is_on_ladder:
+		change_state(CLIMB)
+	if state == CLIMB:
+		if up:
+			velocity.y = -climb_speed
+			$AnimationPlayer.play("climb")
+		elif down:
+			velocity.y = climb_speed
+			$AnimationPlayer.play("climb")
+		else:
+			velocity.y = 0
+			$AnimationPlayer.stop()
+	if state == CLIMB and not is_on_ladder:
+		change_state(IDLE)
+		
+
+	if jump and state == JUMP and jump_count < max_jumps and jump_count > 0:
+		$JumpSound.play()
+		$AnimationPlayer.play("jump_up")
+		velocity.y = jump_speed / double_jump_factor
+		jump_count += 1
 	if right:
 		velocity.x += run_speed
 		$Sprite2D.flip_h = false
@@ -77,6 +110,7 @@ func _physics_process(delta):
 	move_and_slide()
 	if state == JUMP and is_on_floor():
 		change_state(IDLE)
+		$Dust.emitting = true
 	if state == JUMP and velocity.y > 0:
 		$AnimationPlayer.play("jump_down")
 	
@@ -92,6 +126,7 @@ func _physics_process(delta):
 func hurt():
 	if state != HURT:
 		change_state(HURT)
+	$HurtSound.play()
 
 func reset(_position):
 	position = _position
